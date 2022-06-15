@@ -1,0 +1,24 @@
+
+You can open this project with one of 2 choices for programming your device.
+  1) Arduino
+  2) Platform IO
+
+
+1) Arduino
+
+    Arduino is one of the most popular embedded electronics projects available. The Arduino IDE is a program originally designed to make programming these devices streamlined and simple, and has become popular for programming all manner of devices far outside even the original arduino products.
+
+    Use the Arduino IDE if you are just getting started, or have worked with this program before. 
+
+    In the Arduino IDE, open the 'doover_device.ino' file located inside the 'doover_device' folder to get started.
+
+    https://www.arduino.cc/en/software
+    
+
+2) Platform IO
+
+    Platform IO is a platform for professionals. Use this if you are looking to do a lot of this work, or if you want access to more features and tools.
+
+    Open this folder as a Platform IO project to get started.
+
+    https://platformio.org/
