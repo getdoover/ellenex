@@ -2,12 +2,6 @@
     "deployment_package_dir": "processor/",
     "ul_payload_formatter" : "payload_formatters/ul_formatter.js",
     "dl_payload_formatter" : "payload_formatters/dl_formatter.js",
-    "installers" : [
-        {
-            "name": "default",
-            "package_dir": "device_code/"
-        }
-    ],
     "processor_deployments" : {
         "processors" : [
             {
@@ -25,19 +19,6 @@
                 "subscriptions" : [
                     {
                         "channel_name" : "tts_uplink_recv",
-                        "is_active" : true
-                    }
-                ]
-            },
-            {
-                "name" : "on_downlink",
-                "processor_name" : "message_processor",
-                "task_config" : {
-                    "message_type": "DOWNLINK"
-                },
-                "subscriptions" : [
-                    {
-                        "channel_name" : "ui_cmds",
                         "is_active" : true
                     }
                 ]

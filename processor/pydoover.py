@@ -325,6 +325,8 @@ class doover_iface:
 
         return channel(
             channel_id=channel_id,
+            channel_name=channel_name,
+            agent_id=agent_id,
             api_client=self.api_client
         )
 
