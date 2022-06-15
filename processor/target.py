@@ -397,10 +397,9 @@ class target:
 
         input1_processed = None
         input1_percentage_level = None
-        if raw_reading_1 is not None and raw_reading_1 > 3.8:
+        if raw_reading_1 is not None:
             # if sensor_1_type == "submersibleLevel":
-            input1_processed = int( (raw_reading_1 - 4) * 0.1875 * 1.6 * 100 )
-            input1_processed = (input1_processed + sensor_1_zero_cal) * sensor_1_scaling_cal
+            input1_processed = (raw_reading_1 + sensor_1_zero_cal) * sensor_1_scaling_cal
             input1_percentage_level = round((input1_processed / sensor_1_max) * 100, 1)
 
         if tank_type == "horizontalCylinder":
@@ -438,12 +437,12 @@ class target:
     def batt_volts_to_percent(self, volts):
         
         out_val = 0
-        if volts < 3.1:
+        if volts < 2.8:
             out_val = 0
-        elif volts < 3.4:
-            out_val = ((volts - 3.4) * (1/3))
+        elif volts < 3.1:
+            out_val = ((volts - 3.1) * (1/3))
         else:
-            out_val = 0.1 + ((volts - 3.4) * 1.5)
+            out_val = 0.1 + ((volts - 3.1) * 1.5)
 
         out_val = max(out_val, 0)
         out_val = min(out_val, 1)
