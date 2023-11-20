@@ -23,7 +23,7 @@ function decodeUplink(input) {
       let batteryVoltage = input.bytes[7] * 0.1;
 
       let level_mm = decodePLS2Sensor(sensorReading, temperatureReading, sensorRange, liquidDensity)
-      let level_cm = level_mm / 10
+      let level_cm = Number((level_mm / 10).toFixed(0))
 
       var data = {
         level: level_cm,
