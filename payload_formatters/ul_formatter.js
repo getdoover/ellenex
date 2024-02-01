@@ -15,7 +15,7 @@ function decodeUplink(input) {
         };
       }
 
-      let sensorRange = 5; // 5 metres
+      let sensorRange = 20; // 20 metres
       let liquidDensity = 1.0; // Water = 1.0, Diesel = 0.85, Petrol = 0.75
 
       let sensorReading = readHex2bytes(input.bytes[3], input.bytes[4]);

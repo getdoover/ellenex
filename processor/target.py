@@ -179,23 +179,23 @@ class target:
                         "name": "details_submodule",
                         "displayString": "Details",
                         "children": {
-                            "tankType": {
-                                "type": "uiStateCommand",
-                                "name": "tankType",
-                                "displayString": "Tank Type",
-                                "userOptions": {
-                                    "flatBottom": {
-                                        "type": "uiElement",
-                                        "name": "flatBottom",
-                                        "displayString": "Flat Bottom"
-                                    },
-                                    "horizontalCylinder": {
-                                        "type": "uiElement",
-                                        "name": "horizontalCylinder",
-                                        "displayString": "Horizontal Cylinder"
-                                    }
-                                }
-                            },
+                            # "tankType": {
+                            #     "type": "uiStateCommand",
+                            #     "name": "tankType",
+                            #     "displayString": "Tank Type",
+                            #     "userOptions": {
+                            #         "flatBottom": {
+                            #             "type": "uiElement",
+                            #             "name": "flatBottom",
+                            #             "displayString": "Flat Bottom"
+                            #         },
+                            #         "horizontalCylinder": {
+                            #             "type": "uiElement",
+                            #             "name": "horizontalCylinder",
+                            #             "displayString": "Horizontal Cylinder"
+                            #         }
+                            #     }
+                            # },
                             "inputMax": {
                                 "type": "uiFloatParam",
                                 "name": "inputMax",
@@ -371,11 +371,11 @@ class target:
             self.add_to_log("Could not get current raw reading - " + str(e))
 
         tank_type = "flatBottom"
-        try:
-            # sensor_1_type = state_obj['state']['children']['details_submodule']['children']['input1_setup_submodule']['children']['']
-            tank_type = cmds_obj['cmds']['tankType']
-        except Exception as e:
-            self.add_to_log("Could not get tank type - " + str(e))
+        # try:
+        #     # sensor_1_type = state_obj['state']['children']['details_submodule']['children']['input1_setup_submodule']['children']['']
+        #     tank_type = cmds_obj['cmds']['tankType']
+        # except Exception as e:
+        #     self.add_to_log("Could not get tank type - " + str(e))
 
         sensor_1_max = 250
         try:
