@@ -21,6 +21,7 @@ function decodeUplink(input) {
       let sensorReading = readHex2bytes(input.bytes[3], input.bytes[4]);
       let temperatureReading = readHex2bytes(input.bytes[5], input.bytes[6]);
       let batteryVoltage = input.bytes[7] * 0.1;
+      batteryVoltage = batteryVoltage * 1.125 // compensate for apparent drop
 
       let level_mm = decodePLV3Sensor(sensorReading, temperatureReading, sensorRange, liquidDensity)
       console.log("level_mm: " + level_mm)
