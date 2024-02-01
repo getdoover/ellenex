@@ -231,13 +231,13 @@ class target:
                                 "min": 0,
                                 "max": 100
                             },
-                            # "uplinkIntervalMins": {
-                            #     "type": "uiFloatParam",
-                            #     "name": "uplinkIntervalMins",
-                            #     "displayString": "Reporting Interval (mins)",
-                            #     "min": 0.1,
-                            #     "max": 999
-                            # },
+                            "uplinkIntervalMins": {
+                                "type": "uiFloatParam",
+                                "name": "uplinkIntervalMins",
+                                "displayString": "Reporting Interval (mins)",
+                                "min": 1,
+                                "max": 999
+                            },
                             # "burstMode": {
                             #     "type": "uiAction",
                             #     "name": "burstMode",
@@ -327,9 +327,43 @@ class target:
 
     def downlink(self):
         ## Run any downlink processing code here
+        self.send_uplink_interval_if_required()
 
-        ## Currently no downlink task configured in doover_config.json
         pass
+    
+
+    def send_uplink_interval_if_required(self):
+
+        trigger_payload = None
+        if 'msg_obj' in self.kwargs and self.kwargs['msg_obj'] is not None:
+            trigger_payload = self.kwargs['msg_obj']['payload']
+        
+        uplink_interval_mins = None
+        try:
+            # should_reboot = cmds_obj['cmds']['shouldReboot']
+            uplink_interval_mins = trigger_payload['cmds']['uplinkIntervalMins']
+        except Exception as e:
+            self.add_to_log("Could not find 'uplinkIntervalMins' in cmds object")
+            return
+
+        self.add_to_log(uplink_interval_mins)
+
+        if uplink_interval_mins is not None:
+
+            msg_obj = {
+                "uplink_interval_mins" : uplink_interval_mins
+            }
+
+            self.add_to_log(msg_obj)
+
+            tts_dl_channel = pd.channel(
+                api_client=self.cli.api_client,
+                agent_id=self.kwargs['agent_id'],
+                channel_name="tts_downlinks"
+            )
+            tts_dl_channel.publish(
+                msg_str=json.dumps(msg_obj),
+            )
 
 
     def create_doover_client(self):

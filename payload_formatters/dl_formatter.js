@@ -150,6 +150,31 @@ function decimalToHexBytes(n) {
 // For more information visit the TTS Documentation
 // https://www.thethingsindustries.com/docs/integrations/payload-formatters/javascript/downlink-decoder/
 
+function encodeDownlink(input) {
+
+  if ('uplink_interval_mins' in input.data){
+      var uplink_mins = input.data.uplink_interval_mins
+
+      // we want to represent the input as a 8-bytes array
+      var minsByte1 = 0
+      var minsByte2 = 0
+      
+      minsByte1 = uplink_mins & 0xff
+      uplink_mins = (uplink_mins - minsByte1) / 256
+
+      minsByte2 = uplink_mins & 0xff
+      uplink_mins = (uplink_mins - minsByte2) / 256
+
+      return {
+          // bytes: [1, secsByte3, secsByte2, secsByte1],
+          bytes: [16, 1, minsByte2, minsByte1],
+          fPort: 1
+      }
+  }
+
+}
+
+
 // This function takes the raw bytes from a downlink message
 // And converts it to JSON
 
