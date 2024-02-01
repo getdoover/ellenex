@@ -24,7 +24,6 @@ function decodeUplink(input) {
       batteryVoltage = batteryVoltage * 1.125 // compensate for apparent drop
 
       let level_mm = decodePLV3Sensor(sensorReading, temperatureReading, sensorRange, liquidDensity)
-      console.log("level_mm: " + level_mm)
       // let level_cm = Number((level_mm / 10).toFixed(0))
       let level_cm = level_mm.toFixed(0)
 
