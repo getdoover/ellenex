@@ -25,7 +25,7 @@ function decodeUplink(input) {
 
       let level_mm = decodePLV3Sensor(sensorReading, temperatureReading, sensorRange, liquidDensity)
       // let level_cm = Number((level_mm / 10).toFixed(0))
-      let level_cm = level_mm.toFixed(0)
+      let level_cm = Number(level_mm.toFixed(0))
 
       var data = {
         level: level_cm,
