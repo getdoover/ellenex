@@ -366,25 +366,26 @@ class target:
 
         # Sort the dictionary by gauge to ensure correct interpolation and extrapolation
         sorted_gauges = sorted(storage_curve.keys())
+        sorted_float_gauges = sorted([float(g) for g in storage_curve.keys()])
 
         # Find the right place for the input level
         for i in range(len(sorted_gauges) - 1):
-            if sorted_gauges[i] <= level <= sorted_gauges[i + 1]:
+            if sorted_float_gauges[i] <= level <= sorted_float_gauges[i + 1]:
                 # Linear interpolation for values within the range
-                x1, y1 = sorted_gauges[i], storage_curve[sorted_gauges[i]]
-                x2, y2 = sorted_gauges[i + 1], storage_curve[sorted_gauges[i + 1]]
+                x1, y1 = sorted_float_gauges[i], storage_curve[sorted_gauges[i]]
+                x2, y2 = sorted_float_gauges[i + 1], storage_curve[sorted_gauges[i + 1]]
                 return y1 + (level - x1) * (y2 - y1) / (x2 - x1)
 
         # Linear extrapolation for values outside the range
-        if level < sorted_gauges[0]:
+        if level < sorted_float_gauges[0]:
             # Extrapolation for values below the minimum gauge
-            x1, y1 = sorted_gauges[0], storage_curve[sorted_gauges[0]]
-            x2, y2 = sorted_gauges[1], storage_curve[sorted_gauges[1]]
+            x1, y1 = sorted_float_gauges[0], storage_curve[sorted_gauges[0]]
+            x2, y2 = sorted_float_gauges[1], storage_curve[sorted_gauges[1]]
             return y1 + (level - x1) * (y2 - y1) / (x2 - x1)
         else:
             # Extrapolation for values above the maximum gauge
-            x1, y1 = sorted_gauges[-2], storage_curve[sorted_gauges[-2]]
-            x2, y2 = sorted_gauges[-1], storage_curve[sorted_gauges[-1]]
+            x1, y1 = sorted_float_gauges[-2], storage_curve[sorted_gauges[-2]]
+            x2, y2 = sorted_float_gauges[-1], storage_curve[sorted_gauges[-1]]
             return y1 + (level - x1) * (y2 - y1) / (x2 - x1)
 
 
