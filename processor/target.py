@@ -73,6 +73,20 @@ class target:
             agent_id=self.kwargs['agent_id']
         )
 
+        cmds_channel = self.cli.get_channel(
+            channel_name="ui_cmds",
+            agent_id=self.kwargs['agent_id']
+        )
+        cmds_obj = cmds_channel.get_aggregate()
+
+        level_name = "level_percent"
+        level_display_name = "Level (%)"
+        level_precision = 1
+        if self.should_show_volume():
+            level_name = "level_megs"
+            level_display_name = "Level (Megs)"
+            level_precision = 0
+
         ui_obj = {
             "state" : {
                 "type": "uiContianer",
@@ -83,32 +97,32 @@ class target:
                         "name": "significantEvent",
                         "displayString": "Notify me of any problems"
                     },
-                    "level": {
+                    level_name: {
                         "type": "uiVariable",
-                        "name": "level",
-                        "displayString": "Level (%)",
+                        "name": level_name,
+                        "displayString": level_display_name,
                         "varType": "float",
-                        "decPrecision": 1,
+                        "decPrecision": level_precision,
                         "form": "radialGauge",
                         "ranges": [
                             {
                                 "label" : "Low",
-                                "min" : 0,
-                                "max" : 40,
+                                "min" : self.get_min_range(cmds_obj),
+                                "max" : self.get_low_range(cmds_obj),
                                 "colour" : "yellow",
                                 "showOnGraph" : True
                             },
                             {
                                 "label" : "Half",
-                                "min" : 40,
-                                "max" : 80,
+                                "min" : self.get_low_range(cmds_obj),
+                                "max" : self.get_high_range(cmds_obj),
                                 "colour" : "blue",
                                 "showOnGraph" : True
                             },
                             {
                                 "label" : "Full",
-                                "min" : 80,
-                                "max" : 100,
+                                "min" : self.get_high_range(cmds_obj),
+                                "max" : self.get_max_range(cmds_obj),
                                 "colour" : "green",
                                 "showOnGraph" : True
                             }
@@ -292,7 +306,8 @@ class target:
                         "name": "node_connection_info",
                         "connectionType": "periodic",
                         "connectionPeriod": 14400,
-                        "nextConnection": 14400
+                        "nextConnection": 14400,
+                        "allowedMisses": 6,
                     }
                 }
             }
@@ -331,6 +346,86 @@ class target:
 
         pass
     
+    def should_show_volume(self):
+        if self.get_storage_curve() is not None:
+            return True
+        return False
+
+    def get_storage_curve(self):
+        if 'METRES_TO_MEGS' in self.kwargs['agent_settings']['deployment_config']:
+            storage_curve = self.kwargs['agent_settings']['deployment_config']['METRES_TO_MEGS']
+            return storage_curve
+        return None
+    
+    def get_volume(self, level):
+        storage_curve = self.get_storage_curve()
+        
+        ## storage curve is a dictionary of the form { 0 : 0, 5: 50, 6.5: 70 }
+        ## where the key is the level in metres and the value is the volume in megs
+        ## Need to interpolate between the points, and extrapolate beyond the points
+
+        # Sort the dictionary by gauge to ensure correct interpolation and extrapolation
+        sorted_gauges = sorted(storage_curve.keys())
+
+        # Find the right place for the input level
+        for i in range(len(sorted_gauges) - 1):
+            if sorted_gauges[i] <= level <= sorted_gauges[i + 1]:
+                # Linear interpolation for values within the range
+                x1, y1 = sorted_gauges[i], storage_curve[sorted_gauges[i]]
+                x2, y2 = sorted_gauges[i + 1], storage_curve[sorted_gauges[i + 1]]
+                return y1 + (level - x1) * (y2 - y1) / (x2 - x1)
+
+        # Linear extrapolation for values outside the range
+        if level < sorted_gauges[0]:
+            # Extrapolation for values below the minimum gauge
+            x1, y1 = sorted_gauges[0], storage_curve[sorted_gauges[0]]
+            x2, y2 = sorted_gauges[1], storage_curve[sorted_gauges[1]]
+            return y1 + (level - x1) * (y2 - y1) / (x2 - x1)
+        else:
+            # Extrapolation for values above the maximum gauge
+            x1, y1 = sorted_gauges[-2], storage_curve[sorted_gauges[-2]]
+            x2, y2 = sorted_gauges[-1], storage_curve[sorted_gauges[-1]]
+            return y1 + (level - x1) * (y2 - y1) / (x2 - x1)
+
+
+    def get_max_volume(self):
+        storage_curve = self.get_storage_curve()
+        return storage_curve[sorted(storage_curve.keys())[-1]]
+
+    def get_sensor_max(self, cmds_obj):
+        sensor_1_max = 250
+        try:
+            sensor_1_max = cmds_obj['cmds']['inputMax']
+        except Exception as e:
+            self.add_to_log("Could not get sensor max - " + str(e))
+        return sensor_1_max
+
+    def get_min_range(self, cmds_obj=None):
+        if self.should_show_volume():
+            return self.get_volume(0)
+        return 0
+    
+    def get_low_range(self, cmds_obj):
+        percentage = 0.4
+        if self.should_show_volume():
+            max_volume = self.get_max_volume(cmds_obj)
+            return self.get_volume( max_volume * percentage )
+        return (percentage * 100)
+    
+    def get_high_range(self, cmds_obj):
+        percentage = 0.8
+        if self.should_show_volume():
+            max_volume = self.get_max_volume(cmds_obj)
+            return self.get_volume( max_volume * percentage )
+        return (percentage * 100)
+
+    def get_max_range(self, cmds_obj):
+        if self.should_show_volume():
+            return self.get_max_volume(cmds_obj)
+        return 100
+
+    def get_max_volume(self, cmds_obj):
+        return self.get_volume(self.get_sensor_max(cmds_obj=cmds_obj))
 
     def send_uplink_interval_if_required(self):
 
@@ -411,11 +506,7 @@ class target:
         # except Exception as e:
         #     self.add_to_log("Could not get tank type - " + str(e))
 
-        sensor_1_max = 250
-        try:
-            sensor_1_max = cmds_obj['cmds']['inputMax']
-        except Exception as e:
-            self.add_to_log("Could not get sensor max - " + str(e))
+        sensor_1_max = self.get_sensor_max(cmds_obj)
 
         sensor_1_zero_cal = 0
         try:
@@ -430,23 +521,28 @@ class target:
             self.add_to_log("Could not get sensor scaling cal - " + str(e))
 
         input1_processed = None
-        input1_percentage_level = None
+        input1_level_result = None
         if raw_reading_1 is not None:
             # if sensor_1_type == "submersibleLevel":
             input1_processed = (raw_reading_1 + sensor_1_zero_cal) * sensor_1_scaling_cal
-            input1_percentage_level = round((input1_processed / sensor_1_max) * 100, 1)
+            input1_level_result = round((input1_processed / sensor_1_max) * 100, 1)
 
         if tank_type == "horizontalCylinder":
             # https://www.mathsisfun.com/geometry/cylinder-horizontal-volume.html
             r = 50 ## 50 %
-            h = input1_percentage_level
-            input1_percentage_level = (math.acos((r-h)/r)*(r*r)) - ((r-h)*math.sqrt(2*r*h-(h*h)))
+            h = input1_level_result
+            input1_level_result = (math.acos((r-h)/r)*(r*r)) - ((r-h)*math.sqrt(2*r*h-(h*h)))
+
+        level_name = "level_percent"
+        if self.should_show_volume():
+            level_name = "level_megs"
+            input1_level_result = self.get_volume(input1_level_result)
 
         msg_obj = {
             "state" : {
                 "children" : {
-                    "level" : {
-                        "currentValue" : input1_percentage_level
+                    level_name : {
+                        "currentValue" : input1_level_result
                     },
                     "batteryLevel" : {
                         "currentValue" : batt_percent
