@@ -23,12 +23,12 @@ function decodeUplink(input) {
       let batteryVoltage = input.bytes[7] * 0.1;
       batteryVoltage = batteryVoltage * 1.125 // compensate for apparent drop
 
-      let level_mm = decodePLV3Sensor(sensorReading, temperatureReading, sensorRange, liquidDensity)
+      let level_m_raw = decodePLV3Sensor(sensorReading, temperatureReading, sensorRange, liquidDensity)
       // let level_cm = Number((level_mm / 10).toFixed(0))
-      let level_cm = Number(level_mm.toFixed(0))
+      // let level_m = Number(level_m_raw.toFixed(2))
 
       var data = {
-        level: level_cm,
+        level: level_m_raw,
         batteryVoltage: +batteryVoltage.toFixed(1),
       }
 
@@ -87,7 +87,9 @@ function decodePLV3Sensor(sensorReading, temperatureReading, sensorRange, liquid
   const m = 0.007
   const b = -0.35
 
-  let L1 = ((temperatureReading - 1638.3) * sensorRange) / 13106.4
+  // let L1 = ((temperatureReading - 1638.3) * sensorRange) / 13106.4
+  let L1 = ((temperatureReading - 4000) * sensorRange) / 16000
+
   let L2 = (k * sensorReading * m) + b
   let level = (L1 - (L2*10)) / liquidDensity
   

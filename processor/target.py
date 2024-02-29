@@ -199,9 +199,9 @@ class target:
                             "inputMax": {
                                 "type": "uiFloatParam",
                                 "name": "inputMax",
-                                "displayString": "Max Level (cm)",
+                                "displayString": "Max Level (m)",
                                 "min": 0,
-                                "max": 999
+                                "max": 99
                             },
                             "inputLowLevel": {
                                 "type": "uiFloatParam",
@@ -213,9 +213,9 @@ class target:
                             "inputZeroCal": {
                                 "type": "uiFloatParam",
                                 "name": "inputZeroCal",
-                                "displayString": "Zero Calibration (cm)",
-                                "min": -999,
-                                "max": 999
+                                "displayString": "Zero Calibration (m)",
+                                "min": -99,
+                                "max": 99
                             },
                             "inputScalingCal": {
                                 "type": "uiFloatParam",
@@ -249,7 +249,7 @@ class target:
                                 "type": "uiVariable",
                                 "name": "rawlevel",
                                 # "displayString": "Raw Reading (ma)",
-                                "displayString": "Raw Reading (cm)",
+                                "displayString": "Raw Reading (m)",
                                 "varType": "float",
                                 "decPrecision": 2
                             },
