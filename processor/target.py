@@ -538,7 +538,7 @@ class target:
         level_name = "level_percent"
         if self.should_show_volume():
             level_name = "level_megs"
-            input1_level_result = self.get_volume(input1_level_result)
+            input1_level_result = int(self.get_volume(input1_processed))
 
         msg_obj = {
             "state" : {
@@ -595,8 +595,16 @@ class target:
         
         state_obj = state_channel.get_aggregate()
 
-        curr_level = None
-        try: curr_level = state_obj['state']['children']['level']['currentValue']
+        curr_level_percent = None
+        level_name = "level_percent"
+        if self.should_show_volume():
+            level_name = "level_megs"
+        try: 
+            curr_level = state_obj['state']['children'][curr_level]['currentValue']
+            if curr_level is not None and self.should_show_volume():
+                curr_level_percent = (curr_level / self.get_max_volume(cmds_obj)) * 100
+            else:
+                curr_level_percent = curr_level
         except Exception as e: self.add_to_log("Could not get current level - " + str(e))
 
         curr_battery_level = None
@@ -616,7 +624,7 @@ class target:
         last_notification_age = self.get_last_notification_age()
 
         level_warning = None
-        if level_alarm is not None and curr_level is not None and curr_level < level_alarm:
+        if level_alarm is not None and curr_level_percent is not None and curr_level_percent < level_alarm:
             self.add_to_log("Sensor level is low")
 
             level_warning = {
@@ -669,13 +677,13 @@ class target:
 
         ## Assess status icon
         status_icon = None
-        if curr_level is None:
+        if curr_level_percent is None:
             status_icon = "off"
         else:
             idle_icon_level = 60
             if level_alarm is not None:
                 idle_icon_level = (100 + level_alarm) / 2   ## midpoint of full and alarm level
-            if curr_level < idle_icon_level:
+            if curr_level_percent < idle_icon_level:
                 status_icon = "idle"
 
 
