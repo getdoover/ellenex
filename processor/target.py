@@ -600,7 +600,7 @@ class target:
         if self.should_show_volume():
             level_name = "level_megs"
         try: 
-            curr_level = state_obj['state']['children'][curr_level]['currentValue']
+            curr_level = state_obj['state']['children'][level_name]['currentValue']
             if curr_level is not None and self.should_show_volume():
                 curr_level_percent = (curr_level / self.get_max_volume(cmds_obj)) * 100
             else:
