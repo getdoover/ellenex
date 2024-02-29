@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 from operator import truediv
-import os, sys, time, json, math
+import os, sys, time, json, math, traceback
 
 
 ## This is the definition for a tiny lambda function
@@ -59,6 +59,7 @@ class target:
 
         except Exception as e:
             self.add_to_log("ERROR attempting to process message - " + str(e))
+            self.add_to_log(traceback.format_exc())
 
         self.complete_log()
 
@@ -394,7 +395,7 @@ class target:
         return storage_curve[sorted(storage_curve.keys())[-1]]
 
     def get_sensor_max(self, cmds_obj):
-        sensor_1_max = 250
+        sensor_1_max = 10
         try:
             sensor_1_max = cmds_obj['cmds']['inputMax']
         except Exception as e:
@@ -403,30 +404,30 @@ class target:
 
     def get_min_range(self, cmds_obj=None):
         if self.should_show_volume():
-            return self.get_volume(0)
+            return int(self.get_volume(0))
         return 0
     
     def get_low_range(self, cmds_obj):
         percentage = 0.4
         if self.should_show_volume():
-            max_volume = self.get_max_volume(cmds_obj)
-            return self.get_volume( max_volume * percentage )
+            max_depth = self.get_sensor_max(cmds_obj)
+            return int(self.get_volume( max_depth * percentage ))
         return (percentage * 100)
     
     def get_high_range(self, cmds_obj):
         percentage = 0.8
         if self.should_show_volume():
-            max_volume = self.get_max_volume(cmds_obj)
-            return self.get_volume( max_volume * percentage )
+            max_depth = self.get_sensor_max(cmds_obj)
+            return int(self.get_volume( max_depth * percentage ))
         return (percentage * 100)
 
     def get_max_range(self, cmds_obj):
         if self.should_show_volume():
-            return self.get_max_volume(cmds_obj)
+            return int(self.get_max_volume(cmds_obj))
         return 100
 
     def get_max_volume(self, cmds_obj):
-        return self.get_volume(self.get_sensor_max(cmds_obj=cmds_obj))
+        return int(self.get_volume(self.get_sensor_max(cmds_obj=cmds_obj)))
 
     def send_uplink_interval_if_required(self):
 
