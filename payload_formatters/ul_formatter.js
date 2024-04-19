@@ -22,8 +22,8 @@ function decodeUplink(input) {
       let temperatureReading = readHex2bytes(input.bytes[5], input.bytes[6]);
       let batteryVoltage = input.bytes[7] * 0.1;
 
-      let level_mm = decodePLS2Sensor(sensorReading, temperatureReading, sensorRange, liquidDensity)
-      let level_cm = Number((level_mm / 10).toFixed(0))
+      let level_m = decodePLS2Sensor(sensorReading, temperatureReading, sensorRange, liquidDensity)
+      let level_cm = Number((level_m * 100).toFixed(0))
 
       var data = {
         level: level_cm,
@@ -91,11 +91,11 @@ function decodePLS2Sensor(sensorReading, temperatureReading, sensorRange, liquid
     let L2 = (k * sensorReading * m) + b
     
     let levelCalculationTypeOne = (L1 - (L2*10)) / liquidDensity
-    let levelCalculationTypeTwo = (sensorRange * (sensorReading-4000)/16000) / liquidDensity
-    let levelCalculationTypeThree = (sensorReading / liquidDensity)
+    // let levelCalculationTypeTwo = (sensorRange * (sensorReading-4000)/16000) / liquidDensity
+    // let levelCalculationTypeThree = (sensorReading / liquidDensity)
 
     // console.log("Level: " + levelCalculationTypeThree)
 
-    return levelCalculationTypeThree
+    return levelCalculationTypeOne
 
 }
