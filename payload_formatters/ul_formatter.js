@@ -15,14 +15,14 @@ function decodeUplink(input) {
         };
       }
 
-      let sensorRange = 5; // 5 metres
+      let sensorRange = 3; // 3 metres
       let liquidDensity = 1.0; // Water = 1.0, Diesel = 0.85, Petrol = 0.75
 
       let sensorReading = readHex2bytes(input.bytes[3], input.bytes[4]);
       let temperatureReading = readHex2bytes(input.bytes[5], input.bytes[6]);
       let batteryVoltage = input.bytes[7] * 0.1;
 
-      let level_m = decodePLS2Sensor(sensorReading, temperatureReading, sensorRange, liquidDensity)
+      let level_m = decodePLS3Sensor(sensorReading, temperatureReading, sensorRange, liquidDensity)
       let level_cm = Number((level_m * 100).toFixed(0))
 
       var data = {
@@ -78,7 +78,7 @@ function readHex2bytes(byte1, byte2) {
   return result;
 }
 
-function decodePLS2Sensor(sensorReading, temperatureReading, sensorRange, liquidDensity) {
+function decodePLS3Sensor(sensorReading, temperatureReading, sensorRange, liquidDensity) {
 
     const k = 0.01907
     const m = 0.007
