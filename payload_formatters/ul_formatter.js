@@ -17,12 +17,12 @@ function decodeUplink(input) {
         };
       }
 
-      let sensorRange = 1000; // 10 metres
+      let sensorRange = 10000; // 10 metres
 
       let sensorReading = readHex2bytes(input.bytes[3], input.bytes[4]);
       let batteryVoltage = input.bytes[7] * 0.1;
 
-      let level_cm = Number((sensorRange - sensorReading).toFixed(0))
+      let level_cm = Number(((sensorRange - sensorReading)/10).toFixed(0))
 
       var data = {
         level: level_cm,
