@@ -193,6 +193,11 @@ class target:
                                         "type": "uiElement",
                                         "name": "horizontalCylinder",
                                         "displayString": "Horizontal Cylinder"
+                                    },
+                                    "channel":{
+                                        "type": "uiElement",
+                                        "name": "channel",
+                                        "displayString": "Channel"
                                     }
                                 }
                             },
@@ -407,6 +412,11 @@ class target:
             r = 50 ## 50 %
             h = input1_percentage_level
             input1_percentage_level = (math.acos((r-h)/r)*(r*r)) - ((r-h)*math.sqrt(2*r*h-(h*h)))
+
+        if tank_type == "channel" and raw_reading_1 is not None:
+            max_channel_height = sensor_1_max #max height the channel can hold
+            input1_processed = raw_reading_1-(max_channel_height+sensor_1_zero_cal)
+            input1_percentage_level = (input1_processed / max_channel_height) * 100
 
         msg_obj = {
             "state" : {
