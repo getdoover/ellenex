@@ -415,7 +415,7 @@ class target:
 
         if tank_type == "channel" and raw_reading_1 is not None:
             max_channel_height = sensor_1_max #max height the channel can hold
-            input1_processed = raw_reading_1-(max_channel_height+sensor_1_zero_cal)
+            input1_processed = sensor_1_zero_cal-raw_reading_1
             input1_percentage_level = (input1_processed / max_channel_height) * 100
 
         msg_obj = {
