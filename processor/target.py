@@ -405,7 +405,7 @@ class target:
         if tank_type == "horizontalCylinder":
             # https://www.mathsisfun.com/geometry/cylinder-horizontal-volume.html
             r = sensor_1_max/2 ## 50 % # max height sensor can read (diameter of horizontal tank)
-            h = input1_percentage_level
+            h = input1_processed
             input1_percentage_level = round(( ((math.acos((r-h)/r)*(r*r)) - ((r-h)*math.sqrt(2*r*h-(h*h)))) / (math.pi * r * r) ) * 100,1)
 
         msg_obj = {
