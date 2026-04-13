@@ -1,0 +1,23 @@
+[project]
+name = "ellenex"
+version = "0.1.0"
+description = "Doover integration for LoRaWAN Ellenex Devices"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pydoover==1.0.0a7",
+]
+
+[project.scripts]
+export-config = "ellenex.app_config:export"
+export-ui = "ellenex.app_config:export"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.5",
+    "pytest-asyncio>=0.26.0",
+]

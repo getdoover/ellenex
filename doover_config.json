@@ -1,80 +1,132 @@
 {
-    "deployment_package_dir": "processor/",
-    "ul_payload_formatter" : "payload_formatters/ul_formatter.js",
-    "dl_payload_formatter" : "payload_formatters/dl_formatter.js",
-    "installers" : [
-        {
-            "name": "default",
-            "package_dir": "device_code/"
-        }
-    ],
-    "processor_deployments" : {
-        "processors" : [
-            {
-                "name" : "message_processor",
-                "processor_package_dir" : "processor/"
-            }
-        ],
-        "tasks" : [
-            {
-                "name" : "on_uplink",
-                "processor_name" : "message_processor",
-                "task_config" : {
-                    "message_type": "UPLINK"
-                },
-                "subscriptions" : [
-                    {
-                        "channel_name" : "tts_uplink_recv",
-                        "is_active" : true
+    "ellenex_lorawan": {
+        "name": "ellenex_lorawan",
+        "display_name": "Ellenex LoRaWAN",
+        "type": "PRO",
+        "visibility": "PUB",
+        "allow_many": false,
+        "description": "Integrate with Ellenex LoRaWAN devices",
+        "long_description": "README.md",
+        "depends_on": [],
+        "lambda_config": {
+            "Environment": {},
+            "Runtime": "python3.13",
+            "Timeout": 300,
+            "Handler": "src.ellenex.handler",
+            "MemorySize": 128,
+            "Architectures": [
+                "arm64"
+            ]
+        },
+        "config_schema": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "$id": "",
+            "title": "$default",
+            "type": "object",
+            "properties": {
+                "dv_proc_subscriptions": {
+                    "title": "Subscription",
+                    "x-name": "dv_proc_subscriptions",
+                    "x-hidden": true,
+                    "type": [
+                        "array",
+                        "null"
+                    ],
+                    "x-required": false,
+                    "description": "A list of channels to subscribe to.",
+                    "default": [
+                        "on_tts_event"
+                    ],
+                    "x-position": 0,
+                    "items": {
+                        "title": "Channel Subscription",
+                        "x-name": "dv_proc_subscription",
+                        "x-hidden": false,
+                        "type": "string",
+                        "x-required": true,
+                        "description": "The name of the channel to subscribe to"
                     }
-                ]
+                },
+                "dv-app-position": {
+                    "title": "Position",
+                    "x-name": "dv-app-position",
+                    "x-hidden": true,
+                    "type": [
+                        "integer",
+                        "null"
+                    ],
+                    "x-required": false,
+                    "description": "Position of Application in UI Structure. Smaller numbers are closer to the top.",
+                    "default": 100,
+                    "x-position": 1,
+                    "minimum": 0
+                },
+                "sensor_type": {
+                    "enum": [
+                        "pls2-l",
+                        "pls3-l",
+                        "plv3-l",
+                        "dus2-l",
+                        "drc3-l"
+                    ],
+                    "title": "Sensor Type",
+                    "x-name": "sensor_type",
+                    "x-hidden": false,
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "x-required": false,
+                    "description": "Which Ellenex level sensor model is reporting on this device.",
+                    "default": "pls3-l",
+                    "x-position": 2
+                },
+                "hide_default_ui": {
+                    "title": "Hide Default UI",
+                    "x-name": "hide_default_ui",
+                    "x-hidden": false,
+                    "type": [
+                        "boolean",
+                        "null"
+                    ],
+                    "x-required": false,
+                    "description": "Whether to hide the default UI. Useful if you have a custom UI application.",
+                    "default": false,
+                    "x-position": 3
+                }
             },
-            {
-                "name" : "on_downlink",
-                "processor_name" : "message_processor",
-                "task_config" : {
-                    "message_type": "DOWNLINK"
-                },
-                "subscriptions" : [
-                    {
-                        "channel_name" : "ui_cmds",
-                        "is_active" : true
+            "additionalElements": true,
+            "required": []
+        },
+        "organisation_id": null,
+        "code_repo_id": null,
+        "repo_branch": "main",
+        "image_name": null,
+        "banner_url": null,
+        "run_command": null,
+        "lambda_arn": null,
+        "container_registry_profile_id": null,
+        "key": null,
+        "owner_org_id": null,
+        "build_args": null,
+        "ui_schema": {},
+        "icon_url": null,
+        "staging_config": {
+            "lambda_config": {
+                "Environment": {
+                    "Variables": {
+                        "DOOVER_DATA_ENDPOINT": "https://data.staging.udoover.com/api"
                     }
-                ]
-            },
-            {
-                "name" : "on_deploy",
-                "processor_name" : "message_processor",
-                "task_config" : {
-                    "message_type": "DEPLOY"
                 },
-                "subscriptions" : [
-                    {
-                        "channel_name" : "deployments",
-                        "is_active" : true
-                    }
+                "Runtime": "python3.13",
+                "Timeout": 60,
+                "Handler": "src.ellenex.handler",
+                "MemorySize": 128,
+                "Architectures": [
+                    "arm64"
                 ]
-            }
-        ]
-    },
-    "deployment_channel_messages" : [
-        {
-            "channel_name" : "ui_cmds",
-            "channel_message" : {
-                "cmds" : {}
             }
         },
-        {
-            "channel_name" : "ui_state",
-            "channel_message" : {
-                "state" : null
-            }
-        },
-        {
-            "channel_name" : "deployments",
-            "channel_message" : {
-                "new_deployment" : true
-            }
-        }
-    ]
+        "build_widget_command": null
+    }
 }
