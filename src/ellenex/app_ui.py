@@ -7,25 +7,35 @@ from .app_tags import EllenexTags
 
 class EllenexUI(ui.UI, hidden="$config.app().hide_ui"):
     level = ui.NumericVariable(
-        "Level (%)",
+        "Level",
+        units="%",
         value=EllenexTags.level_pct,
         precision=1,
-        form="radialGauge",
+        form=ui.Widget.radial,
         ranges=[
-            ui.Range("Low", 0, 40, ui.Colour.yellow, show_on_graph=True),
-            ui.Range("Half", 40, 80, ui.Colour.blue, show_on_graph=True),
-            ui.Range("Full", 80, 100, ui.Colour.green, show_on_graph=True),
+            ui.Range("Low", 0, 40, ui.Colour.yellow),
+            ui.Range("Half", 40, 80, ui.Colour.blue),
+            ui.Range("Full", 80, 100, ui.Colour.green),
         ],
     )
 
+    level_volume = ui.NumericVariable(
+        "Volume",
+        units="ML",
+        value=EllenexTags.level_volume,
+        precision=2,
+        hidden="$tag.app().level_volume == null",
+    )
+
     battery_level = ui.NumericVariable(
-        "Battery (%)",
+        "Battery",
+        units="%",
         value=EllenexTags.battery_pct,
         precision=0,
         ranges=[
-            ui.Range("Low", 0, 30, ui.Colour.yellow, show_on_graph=True),
-            ui.Range("Half", 30, 80, ui.Colour.blue, show_on_graph=True),
-            ui.Range("Full", 80, 100, ui.Colour.green, show_on_graph=True),
+            ui.Range("Low", 0, 30, ui.Colour.yellow),
+            ui.Range("Half", 30, 80, ui.Colour.blue),
+            ui.Range("Full", 80, 100, ui.Colour.green),
         ],
     )
 
@@ -41,16 +51,6 @@ class EllenexUI(ui.UI, hidden="$config.app().hide_ui"):
     details = ui.Submodule(
         "Details",
         children=[
-            ui.Select(
-                "Tank Type",
-                options=[ui.Option("Flat Bottom"), ui.Option("Horizontal Cylinder")],
-                name="tank_type",
-            ),
-            ui.FloatInput("Max Level (cm)", min_val=0, max_val=999, name="input_max"),
-            ui.FloatInput("Low level alarm (%)", min_val=0, max_val=99, name="input_low_level"),
-            ui.FloatInput("Zero Calibration (cm)", min_val=-999, max_val=999, name="input_zero_cal"),
-            ui.FloatInput("Scaling Calibration (x multiply)", min_val=-999, max_val=999, name="input_scaling_cal"),
-            ui.FloatInput("Battery Alarm (%)", min_val=0, max_val=100, name="batt_alarm_level"),
             ui.NumericVariable(
                 "Raw Reading",
                 value=EllenexTags.raw_level,
@@ -58,7 +58,8 @@ class EllenexUI(ui.UI, hidden="$config.app().hide_ui"):
                 name="raw_level",
             ),
             ui.NumericVariable(
-                "Battery (V)",
+                "Battery",
+                units="V",
                 value=EllenexTags.raw_battery_v,
                 precision=2,
                 name="raw_battery_v",

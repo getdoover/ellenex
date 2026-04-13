@@ -81,6 +81,132 @@
                     "default": "pls3-l",
                     "x-position": 2
                 },
+                "tank_type": {
+                    "enum": [
+                        "N/A",
+                        "Flat Bottom",
+                        "Horizontal Cylinder"
+                    ],
+                    "title": "Tank Type",
+                    "x-name": "tank_type",
+                    "x-hidden": false,
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "x-required": false,
+                    "description": "Tank geometry \u2014 used to translate depth to percentage full.",
+                    "default": "Flat Bottom",
+                    "x-position": 3
+                },
+                "max_level_m": {
+                    "title": "Max Level (m)",
+                    "x-name": "max_level_m",
+                    "x-hidden": false,
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "x-required": false,
+                    "description": "Sensor reading (in metres) that corresponds to 100% full.",
+                    "default": 2.5,
+                    "x-position": 4
+                },
+                "zero_calibration_m": {
+                    "title": "Zero Calibration (m)",
+                    "x-name": "zero_calibration_m",
+                    "x-hidden": false,
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "x-required": false,
+                    "description": "Offset (in metres) added to every raw sensor reading before scaling.",
+                    "default": 0.0,
+                    "x-position": 5
+                },
+                "scaling_calibration": {
+                    "title": "Scaling Calibration",
+                    "x-name": "scaling_calibration",
+                    "x-hidden": false,
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "x-required": false,
+                    "description": "Multiplier applied after the zero offset.",
+                    "default": 1.0,
+                    "x-position": 6
+                },
+                "low_level_alarm_": {
+                    "title": "Low Level Alarm (%)",
+                    "x-name": "low_level_alarm_",
+                    "x-hidden": false,
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "x-required": false,
+                    "description": "Trigger a low-level warning when the tank drops below this percentage.",
+                    "default": null,
+                    "x-position": 7
+                },
+                "battery_alarm_": {
+                    "title": "Battery Alarm (%)",
+                    "x-name": "battery_alarm_",
+                    "x-hidden": false,
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "x-required": false,
+                    "description": "Trigger a low-battery warning when battery drops below this percentage.",
+                    "default": null,
+                    "x-position": 8
+                },
+                "storage_curve": {
+                    "title": "Storage Curve",
+                    "x-name": "storage_curve",
+                    "x-hidden": false,
+                    "type": "array",
+                    "x-required": true,
+                    "description": "Optional lookup table mapping sensor level (m) to stored volume (ML). When provided, volume is reported alongside percentage.",
+                    "x-position": 9,
+                    "items": {
+                        "title": "Point",
+                        "x-name": "point",
+                        "x-hidden": false,
+                        "type": "object",
+                        "x-required": true,
+                        "properties": {
+                            "level_m": {
+                                "title": "Level (m)",
+                                "x-name": "level_m",
+                                "x-hidden": false,
+                                "type": "number",
+                                "x-required": true,
+                                "description": "Sensor level reading in metres.",
+                                "x-position": 1
+                            },
+                            "volume_ml": {
+                                "title": "Volume (ML)",
+                                "x-name": "volume_ml",
+                                "x-hidden": false,
+                                "type": "number",
+                                "x-required": true,
+                                "description": "Stored volume at this level in megalitres.",
+                                "x-position": 2
+                            }
+                        },
+                        "additionalElements": true,
+                        "required": [
+                            "level_m",
+                            "volume_ml"
+                        ],
+                        "x-collapsible": true,
+                        "x-defaultCollapsed": false
+                    }
+                },
                 "hide_default_ui": {
                     "title": "Hide Default UI",
                     "x-name": "hide_default_ui",
@@ -92,11 +218,13 @@
                     "x-required": false,
                     "description": "Whether to hide the default UI. Useful if you have a custom UI application.",
                     "default": false,
-                    "x-position": 3
+                    "x-position": 10
                 }
             },
             "additionalElements": true,
-            "required": []
+            "required": [
+                "storage_curve"
+            ]
         },
         "organisation_id": null,
         "code_repo_id": null,
@@ -109,7 +237,153 @@
         "key": null,
         "owner_org_id": null,
         "build_args": null,
-        "ui_schema": {},
+        "ui_schema": {
+            "displayString": "$config.app().APP_DISPLAY_NAME",
+            "hidden": "$config.app().hide_ui:boolean:false",
+            "position": "$config.app().position:number:50",
+            "icon": null,
+            "colour": null,
+            "defaultOpen": false,
+            "type": "uiApplication",
+            "name": "$config.app().APP_KEY",
+            "children": {
+                "level": {
+                    "name": "level",
+                    "type": "uiVariable",
+                    "displayString": "Level",
+                    "showActivity": true,
+                    "form": "radialGauge",
+                    "position": 51,
+                    "hidden": false,
+                    "units": "%",
+                    "varType": "float",
+                    "currentValue": "$tag.app().level_pct:number:null",
+                    "decPrecision": 1,
+                    "ranges": [
+                        {
+                            "min": 0,
+                            "max": 40,
+                            "colour": "yellow",
+                            "show_on_graph": true,
+                            "label": "Low"
+                        },
+                        {
+                            "min": 40,
+                            "max": 80,
+                            "colour": "blue",
+                            "show_on_graph": true,
+                            "label": "Half"
+                        },
+                        {
+                            "min": 80,
+                            "max": 100,
+                            "colour": "green",
+                            "show_on_graph": true,
+                            "label": "Full"
+                        }
+                    ]
+                },
+                "volume": {
+                    "name": "volume",
+                    "type": "uiVariable",
+                    "displayString": "Volume",
+                    "showActivity": true,
+                    "position": 52,
+                    "hidden": "$tag.app().level_volume == null",
+                    "units": "ML",
+                    "varType": "float",
+                    "currentValue": "$tag.app().level_volume:number:null",
+                    "decPrecision": 2
+                },
+                "battery": {
+                    "name": "battery",
+                    "type": "uiVariable",
+                    "displayString": "Battery",
+                    "showActivity": true,
+                    "position": 53,
+                    "hidden": false,
+                    "units": "%",
+                    "varType": "float",
+                    "currentValue": "$tag.app().battery_pct:number:null",
+                    "decPrecision": 0,
+                    "ranges": [
+                        {
+                            "min": 0,
+                            "max": 30,
+                            "colour": "yellow",
+                            "show_on_graph": true,
+                            "label": "Low"
+                        },
+                        {
+                            "min": 30,
+                            "max": 80,
+                            "colour": "blue",
+                            "show_on_graph": true,
+                            "label": "Half"
+                        },
+                        {
+                            "min": 80,
+                            "max": 100,
+                            "colour": "green",
+                            "show_on_graph": true,
+                            "label": "Full"
+                        }
+                    ]
+                },
+                "level_low": {
+                    "name": "level_low",
+                    "type": "uiWarningIndicator",
+                    "displayString": "Level Low",
+                    "position": 54,
+                    "hidden": "!$tag.app().level_low_warning",
+                    "currentValue": "$cmds.app().level_low",
+                    "can_cancel": true
+                },
+                "battery_low": {
+                    "name": "battery_low",
+                    "type": "uiWarningIndicator",
+                    "displayString": "Battery Low",
+                    "position": 55,
+                    "hidden": "!$tag.app().batt_low_warning",
+                    "currentValue": "$cmds.app().battery_low",
+                    "can_cancel": true
+                },
+                "details": {
+                    "name": "details",
+                    "type": "uiSubmodule",
+                    "displayString": "Details",
+                    "showActivity": true,
+                    "position": 58,
+                    "hidden": false,
+                    "children": {
+                        "raw_level": {
+                            "name": "raw_level",
+                            "type": "uiVariable",
+                            "displayString": "Raw Reading",
+                            "showActivity": true,
+                            "position": 56,
+                            "hidden": false,
+                            "varType": "float",
+                            "currentValue": "$tag.app().raw_level:number:null",
+                            "decPrecision": 2
+                        },
+                        "raw_battery_v": {
+                            "name": "raw_battery_v",
+                            "type": "uiVariable",
+                            "displayString": "Battery",
+                            "showActivity": true,
+                            "position": 57,
+                            "hidden": false,
+                            "units": "V",
+                            "varType": "float",
+                            "currentValue": "$tag.app().raw_battery_v:number:null",
+                            "decPrecision": 2
+                        }
+                    },
+                    "defaultOpen": true
+                }
+            }
+        },
         "icon_url": null,
         "staging_config": {
             "lambda_config": {
@@ -127,6 +401,9 @@
                 ]
             }
         },
-        "build_widget_command": null
+        "build_widget_command": null,
+        "id": 169314305357929221,
+        "export_config_command": null,
+        "export_ui_command": null
     }
 }

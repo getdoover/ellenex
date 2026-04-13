@@ -10,7 +10,7 @@ dependencies = [
 
 [project.scripts]
 export-config = "ellenex.app_config:export"
-export-ui = "ellenex.app_config:export"
+export-ui = "ellenex.app_ui:export"
 
 [build-system]
 requires = ["hatchling"]

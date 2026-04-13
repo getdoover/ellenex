@@ -16,7 +16,7 @@ import struct
 
 VALID_PORTS = (1, 15)
 V3_LENGTH = 8
-DRC3_RANGE_CM = 1000  # 10 m sensor range, mirrors the DUS2-L convention
+DRC3_RANGE_M = 10.0  # 10 m sensor range
 
 _K = 0.01907
 _M = 0.007
@@ -43,21 +43,19 @@ def decode(payload: bytes, port: int, sensor_type: str, liquid_density: float = 
     battery_v = payload[7] * 0.1
 
     if sensor_type == "pls2-l":
-        # PLS2-L returns sensor reading directly as mm; UI works in cm.
+        # PLS2-L returns sensor reading directly as mm.
         level_mm = sensor_reading / liquid_density
-        raw_level = round(level_mm / 10)
+        raw_level = level_mm / 1000
     elif sensor_type == "dus2-l":
-        # DUS2-L is an ultrasonic distance sensor with a 10 m (10000 mm) range.
-        # Reading is distance from the sensor; subtract from range for fill height.
+        # DUS2-L is an ultrasonic distance sensor with a 10 m range.
+        # Reading is distance from the sensor (mm); subtract from range for fill height.
         sensor_range_mm = 10000
-        raw_level = round((sensor_range_mm - sensor_reading) / 10)
+        raw_level = (sensor_range_mm - sensor_reading) / 1000
     elif sensor_type == "pls3-l":
         sensor_range = 3  # metres
         l1 = ((temperature_reading - 1638.3) * sensor_range) / 13106.4
         l2 = (_K * sensor_reading * _M) + _B
-        level_m = (l1 - l2 * 10) / liquid_density
-        # PLS3-L UI works in cm
-        raw_level = round(level_m * 100)
+        raw_level = (l1 - l2 * 10) / liquid_density  # metres
     elif sensor_type == "plv3-l":
         sensor_range = 20  # metres
         battery_v *= 1.125  # legacy compensation
@@ -88,11 +86,8 @@ def _decode_drc3(payload: bytes) -> dict | None:
     if distance_m is None or battery_mv is None:
         return None
 
-    distance_cm = float(distance_m) * 100
-    # Match the DUS2-L convention: report fill height (cm) using the sensor
-    # max range as the empty reference. Tank height calibration is applied
-    # downstream via inputMax / inputZeroCal / inputScalingCal.
-    raw_level = round(DRC3_RANGE_CM - distance_cm)
+    # Report fill height in metres using the sensor max range as empty reference.
+    raw_level = DRC3_RANGE_M - float(distance_m)
     return {
         "raw_level": raw_level,
         "raw_battery_v": round(float(battery_mv) / 1000, 3),

@@ -4,6 +4,7 @@ from pydoover.tags import Tag, Tags
 class EllenexTags(Tags):
     # Computed values shown in main UI
     level_pct = Tag("number", default=None)
+    level_volume = Tag("number", default=None)
     battery_pct = Tag("number", default=None)
 
     # Raw values from the sensor

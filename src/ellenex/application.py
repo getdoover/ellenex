@@ -5,10 +5,10 @@ import math
 from pydoover.processor import Application
 from pydoover.models import MessageCreateEvent
 
-from .app_config import EllenexProcessorConfig
+from .app_config import EllenexProcessorConfig, TankType
 from .app_tags import EllenexTags
 from .app_ui import EllenexUI
-from . import decoder
+from .decoder import decode
 
 log = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ class EllenexProcessor(Application):
             return
 
         sensor_type = self.config.sensor_type.value.value
-        decoded = decoder.decode(payload, port, sensor_type)
+        decoded = decode(payload, port, sensor_type)
         if not decoded:
             log.warning("Ellenex port=%s len=%s did not match expected format", port, len(payload))
             return
@@ -60,6 +60,7 @@ class EllenexProcessor(Application):
 
         if level_pct is not None:
             await self.tags.level_pct.set(level_pct)
+            await self.tags.level_volume.set(self._compute_volume(raw_level))
         await self.tags.battery_pct.set(battery_pct)
 
         await self._assess_warnings(level_pct, battery_pct)
@@ -68,17 +69,17 @@ class EllenexProcessor(Application):
         if raw_level is None:
             return None
 
-        zero_cal = self._param("input_zero_cal", 0)
-        scaling_cal = self._param("input_scaling_cal", 1)
-        sensor_max = self._param("input_max", 250)
-        tank_type = self._param("tank_type", "Flat Bottom")
+        zero_cal = self.config.zero_calibration.value
+        scaling_cal = self.config.scaling_calibration.value
+        sensor_max = self.config.max_level.value
+        tank_type = self.config.tank_type.value
 
         processed = (raw_level + zero_cal) * scaling_cal
         if not sensor_max:
             return None
         pct = round((processed / sensor_max) * 100, 1)
 
-        if tank_type == "Horizontal Cylinder":
+        if tank_type is TankType.HORIZONTAL_CYLINDER:
             # Horizontal cylinder cross-section area mapping (legacy formula)
             r = 50.0
             h = max(0.0, min(pct, 100.0))
@@ -89,15 +90,34 @@ class EllenexProcessor(Application):
 
         return pct
 
-    def _param(self, name: str, default):
-        try:
-            element = getattr(self.ui.details, name, None) or getattr(self.ui, name, None)
-            if element is None:
-                return default
-            value = element.value
-            return value if value is not None else default
-        except Exception:
-            return default
+    def _storage_curve(self) -> list[tuple[float, float]]:
+        points = []
+        for point in self.config.storage_curve.value:
+            level_m = point.level_m.value
+            volume_ml = point.volume_ml.value
+            if level_m is None or volume_ml is None:
+                continue
+            points.append((float(level_m), float(volume_ml)))
+        points.sort(key=lambda p: p[0])
+        return points
+
+    def _compute_volume(self, level_m: float | None) -> float | None:
+        if level_m is None:
+            return None
+        curve = self._storage_curve()
+        if len(curve) < 2:
+            return None
+
+        for (x1, y1), (x2, y2) in zip(curve, curve[1:]):
+            if x1 <= level_m <= x2:
+                return y1 + (level_m - x1) * (y2 - y1) / (x2 - x1)
+
+        # Extrapolate outside the range using the nearest two points.
+        if level_m < curve[0][0]:
+            (x1, y1), (x2, y2) = curve[0], curve[1]
+        else:
+            (x1, y1), (x2, y2) = curve[-2], curve[-1]
+        return y1 + (level_m - x1) * (y2 - y1) / (x2 - x1)
 
     @staticmethod
     def _batt_volts_to_percent(volts: float | None) -> float:
@@ -112,8 +132,8 @@ class EllenexProcessor(Application):
         return max(0.0, min(out, 1.0))
 
     async def _assess_warnings(self, level_pct: float | None, battery_pct: float | None):
-        level_alarm = self._param("input_low_level", None)
-        batt_alarm = self._param("batt_alarm_level", None)
+        level_alarm = self.config.low_level_alarm.value
+        batt_alarm = self.config.battery_alarm.value
 
         new_level_warn = (
             level_alarm is not None and level_pct is not None and level_pct < level_alarm
@@ -122,8 +142,8 @@ class EllenexProcessor(Application):
             batt_alarm is not None and battery_pct is not None and battery_pct < batt_alarm
         )
 
-        prev_level_warn = await self.tags.level_low_warning.get()
-        prev_batt_warn = await self.tags.batt_low_warning.get()
+        prev_level_warn = self.tags.level_low_warning.value
+        prev_batt_warn = self.tags.batt_low_warning.value
 
         await self.tags.level_low_warning.set(new_level_warn)
         await self.tags.batt_low_warning.set(new_batt_warn)
@@ -135,5 +155,5 @@ class EllenexProcessor(Application):
 
     async def _notify(self, message: str):
         log.info("Ellenex notification: %s", message)
-        await self.api.create_message("significantEvent", message)
+        await self.api.create_message("notifications", {"message": message})
         await self.api.create_message("activity_logs", {"activity_log": {"action_string": message}})
