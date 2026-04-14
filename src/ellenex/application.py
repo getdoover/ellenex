@@ -24,6 +24,20 @@ class EllenexProcessor(Application):
     tags: EllenexTags
     ui: EllenexUI
 
+    async def pre_hook_filter(self, event):
+        if not isinstance(event, MessageCreateEvent):
+            return False
+
+        if event.channel.name != "on_tts_event":
+            return False
+
+        try:
+            event.message.data["uplink_message"]
+        except KeyError:
+            return False
+
+        return True
+
     async def setup(self):
         await self._update_connection_info(self.ui_manager.get_value("uplink_interval"))
 
@@ -32,19 +46,15 @@ class EllenexProcessor(Application):
             connection_type=ConnectionType.periodic,
             expected_interval=minutes * 60,
             offline_after=minutes * 60 * 3,
+            sleep_time=None,
+            next_wake_time=None,
         )
         if self.connection_config == desired:
             return
         await self.api.update_connection_config(desired)
 
     async def on_message_create(self, event: MessageCreateEvent):
-        if event.channel.name != "on_tts_event":
-            return
-
-        uplink = event.message.data.get("uplink_message")
-        if not uplink:
-            return
-
+        uplink = event.message.data["uplink_message"]
         port = uplink.get("f_port")
         frm = uplink.get("frm_payload")
         if port is None or not frm:
@@ -59,7 +69,11 @@ class EllenexProcessor(Application):
         sensor_type = self.config.sensor_type.value.value
         decoded = decode(payload, port, sensor_type)
         if not decoded:
-            log.warning("Ellenex port=%s len=%s did not match expected format", port, len(payload))
+            log.warning(
+                "Ellenex port=%s len=%s did not match expected format",
+                port,
+                len(payload),
+            )
             return
 
         log.info("Ellenex (%s) decoded: %s", sensor_type, decoded)
@@ -108,7 +122,9 @@ class EllenexProcessor(Application):
             r = 50.0
             h = max(0.0, min(pct, 100.0))
             try:
-                pct = math.acos((r - h) / r) * (r * r) - (r - h) * math.sqrt(2 * r * h - h * h)
+                pct = math.acos((r - h) / r) * (r * r) - (r - h) * math.sqrt(
+                    2 * r * h - h * h
+                )
             except ValueError:
                 pass
 
@@ -155,15 +171,21 @@ class EllenexProcessor(Application):
             out = 0.1 + (volts - 3.1) * 1.5
         return max(0.0, min(out, 1.0))
 
-    async def _assess_warnings(self, level_pct: float | None, battery_pct: float | None):
+    async def _assess_warnings(
+        self, level_pct: float | None, battery_pct: float | None
+    ):
         level_alarm = self.config.low_level_alarm.value
         batt_alarm = self.config.battery_alarm.value
 
         new_level_warn = (
-            level_alarm is not None and level_pct is not None and level_pct < level_alarm
+            level_alarm is not None
+            and level_pct is not None
+            and level_pct < level_alarm
         )
         new_batt_warn = (
-            batt_alarm is not None and battery_pct is not None and battery_pct < batt_alarm
+            batt_alarm is not None
+            and battery_pct is not None
+            and battery_pct < batt_alarm
         )
 
         prev_level_warn = self.tags.level_low_warning.value
@@ -185,7 +207,9 @@ class EllenexProcessor(Application):
         # on fPort 1. 0x10 = command, 0x01 = unit (minute), then minutes
         # as a 16-bit big-endian integer.
         minutes = max(1, min(int(payload), 0xFFFF))
-        frm = base64.b64encode(bytes([0x10, 0x01, (minutes >> 8) & 0xFF, minutes & 0xFF])).decode()
+        frm = base64.b64encode(
+            bytes([0x10, 0x01, (minutes >> 8) & 0xFF, minutes & 0xFF])
+        ).decode()
         log.info("Sending downlink to set uplink interval to %s min", minutes)
         await self.api.create_message(
             "tts_downlink",
@@ -196,4 +220,6 @@ class EllenexProcessor(Application):
     async def _notify(self, message: str):
         log.info("Ellenex notification: %s", message)
         await self.api.create_message("notifications", {"message": message})
-        await self.api.create_message("activity_logs", {"activity_log": {"action_string": message}})
+        await self.api.create_message(
+            "activity_logs", {"activity_log": {"action_string": message}}
+        )
