@@ -66,6 +66,15 @@ class EllenexUI(ui.UI, hidden="$config.app().hide_ui"):
                 precision=2,
                 name="raw_battery_v",
             ),
+            ui.FloatInput(
+                "Uplink Interval",
+                units="min",
+                default=240,
+                min_val=1,
+                max_val=1440,
+                precision=0,
+                name="uplink_interval",
+            ),
         ],
     )
 

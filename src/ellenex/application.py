@@ -4,6 +4,7 @@ import math
 
 from pydoover.processor import Application
 from pydoover.models import MessageCreateEvent
+from pydoover.ui import handler
 
 from .app_config import EllenexProcessorConfig, TankType
 from .app_tags import EllenexTags
@@ -163,6 +164,19 @@ class EllenexProcessor(Application):
             await self._notify("Level is getting low")
         if new_batt_warn and not prev_batt_warn:
             await self._notify("Battery is getting low")
+
+    @handler("uplink_interval", parser=int)
+    async def on_uplink_interval(self, ctx, payload: int):
+        # Ellenex "change sampling rate" downlink: [0x10, 0x01, high, low]
+        # on fPort 1. 0x10 = command, 0x01 = unit (minute), then minutes
+        # as a 16-bit big-endian integer.
+        minutes = max(1, min(int(payload), 0xFFFF))
+        frm = base64.b64encode(bytes([0x10, 0x01, (minutes >> 8) & 0xFF, minutes & 0xFF])).decode()
+        log.info("Sending downlink to set uplink interval to %s min", minutes)
+        await self.api.create_message(
+            "tts_downlink",
+            {"f_port": 1, "frm_payload": frm},
+        )
 
     async def _notify(self, message: str):
         log.info("Ellenex notification: %s", message)
