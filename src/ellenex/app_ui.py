@@ -17,6 +17,7 @@ class EllenexUI(ui.UI, hidden="$config.app().hide_ui"):
             ui.Range("Half", 40, 80, ui.Colour.blue),
             ui.Range("Full", 80, 100, ui.Colour.green),
         ],
+        hidden=EllenexTags.level_pct_hidden,
     )
 
     level_volume = ui.NumericVariable(
@@ -24,7 +25,7 @@ class EllenexUI(ui.UI, hidden="$config.app().hide_ui"):
         units="ML",
         value=EllenexTags.level_volume,
         precision=2,
-        hidden="$tag.app().level_volume == null",
+        hidden=EllenexTags.level_volume_hidden,
     )
 
     battery_level = ui.NumericVariable(
@@ -41,11 +42,11 @@ class EllenexUI(ui.UI, hidden="$config.app().hide_ui"):
 
     level_low_warning = ui.WarningIndicator(
         "Level Low",
-        hidden="!$tag.app().level_low_warning",
+        hidden=EllenexTags.level_low_warning_hidden,
     )
     batt_low_warning = ui.WarningIndicator(
         "Battery Low",
-        hidden="!$tag.app().batt_low_warning",
+        hidden=EllenexTags.batt_low_warning_hidden,
     )
 
     details = ui.Submodule(

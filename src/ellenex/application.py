@@ -63,6 +63,10 @@ class EllenexProcessor(Application):
             await self.tags.level_volume.set(self._compute_volume(raw_level))
         await self.tags.battery_pct.set(battery_pct)
 
+        volume_enabled = len(self._storage_curve()) >= 2
+        await self.tags.level_pct_hidden.set(volume_enabled)
+        await self.tags.level_volume_hidden.set(not volume_enabled)
+
         await self._assess_warnings(level_pct, battery_pct)
 
     def _compute_level_pct(self, raw_level: float | None) -> float | None:
@@ -147,6 +151,8 @@ class EllenexProcessor(Application):
 
         await self.tags.level_low_warning.set(new_level_warn)
         await self.tags.batt_low_warning.set(new_batt_warn)
+        await self.tags.level_low_warning_hidden.set(not new_level_warn)
+        await self.tags.batt_low_warning_hidden.set(not new_batt_warn)
 
         if new_level_warn and not prev_level_warn:
             await self._notify("Level is getting low")

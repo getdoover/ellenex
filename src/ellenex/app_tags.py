@@ -11,6 +11,14 @@ class EllenexTags(Tags):
     raw_level = Tag("number", default=None)
     raw_battery_v = Tag("number", default=None)
 
-    # Warning state (drives WarningIndicator visibility)
+    # Warning state (drives WarningIndicator visibility).
+    # `*_hidden` tags are the inverse — UI `hidden=` needs a plain tag, no negation.
     level_low_warning = Tag("boolean", default=False)
     batt_low_warning = Tag("boolean", default=False)
+    level_low_warning_hidden = Tag("boolean", default=True)
+    batt_low_warning_hidden = Tag("boolean", default=True)
+
+    # Drive % vs volume UI visibility — kept as opposites.
+    # When a storage curve is configured, hide level_pct and show level_volume.
+    level_pct_hidden = Tag("boolean", default=False)
+    level_volume_hidden = Tag("boolean", default=True)
