@@ -4,6 +4,7 @@ import math
 
 from pydoover.processor import Application
 from pydoover.models import MessageCreateEvent
+from pydoover.models.data import ConnectionConfig, ConnectionType
 from pydoover.ui import handler
 
 from .app_config import EllenexProcessorConfig, TankType
@@ -22,6 +23,19 @@ class EllenexProcessor(Application):
     config: EllenexProcessorConfig
     tags: EllenexTags
     ui: EllenexUI
+
+    async def setup(self):
+        await self._update_connection_info(self.ui_manager.get_value("uplink_interval"))
+
+    async def _update_connection_info(self, minutes: int):
+        desired = ConnectionConfig(
+            connection_type=ConnectionType.periodic,
+            expected_interval=minutes * 60,
+            offline_after=minutes * 60 * 3,
+        )
+        if self.connection_config == desired:
+            return
+        await self.api.update_connection_config(desired)
 
     async def on_message_create(self, event: MessageCreateEvent):
         if event.channel.name != "on_tts_event":
@@ -177,6 +191,7 @@ class EllenexProcessor(Application):
             "tts_downlink",
             {"f_port": 1, "frm_payload": frm},
         )
+        await self._update_connection_info(minutes)
 
     async def _notify(self, message: str):
         log.info("Ellenex notification: %s", message)
