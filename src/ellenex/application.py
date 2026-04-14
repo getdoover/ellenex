@@ -55,12 +55,13 @@ class EllenexProcessor(Application):
         await self.tags.raw_level.set(raw_level)
         await self.tags.raw_battery_v.set(raw_battery)
 
-        level_pct = self._compute_level_pct(raw_level)
+        calibrated_level = self._calibrate(raw_level)
+        level_pct = self._compute_level_pct(calibrated_level)
         battery_pct = round(self._batt_volts_to_percent(raw_battery) * 100)
 
         if level_pct is not None:
             await self.tags.level_pct.set(level_pct)
-            await self.tags.level_volume.set(self._compute_volume(raw_level))
+            await self.tags.level_volume.set(self._compute_volume(calibrated_level))
         await self.tags.battery_pct.set(battery_pct)
 
         volume_enabled = len(self._storage_curve()) >= 2
@@ -69,19 +70,23 @@ class EllenexProcessor(Application):
 
         await self._assess_warnings(level_pct, battery_pct)
 
-    def _compute_level_pct(self, raw_level: float | None) -> float | None:
+    def _calibrate(self, raw_level: float | None) -> float | None:
         if raw_level is None:
             return None
-
         zero_cal = self.config.zero_calibration.value
         scaling_cal = self.config.scaling_calibration.value
+        return (raw_level + zero_cal) * scaling_cal
+
+    def _compute_level_pct(self, calibrated_level: float | None) -> float | None:
+        if calibrated_level is None:
+            return None
+
         sensor_max = self.config.max_level.value
         tank_type = self.config.tank_type.value
 
-        processed = (raw_level + zero_cal) * scaling_cal
         if not sensor_max:
             return None
-        pct = round((processed / sensor_max) * 100, 1)
+        pct = round((calibrated_level / sensor_max) * 100, 1)
 
         if tank_type is TankType.HORIZONTAL_CYLINDER:
             # Horizontal cylinder cross-section area mapping (legacy formula)

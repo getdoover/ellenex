@@ -25,6 +25,7 @@ class EllenexUI(ui.UI, hidden="$config.app().hide_ui"):
         units="ML",
         value=EllenexTags.level_volume,
         precision=2,
+        form=ui.Widget.radial,
         hidden=EllenexTags.level_volume_hidden,
     )
 
@@ -67,6 +68,38 @@ class EllenexUI(ui.UI, hidden="$config.app().hide_ui"):
             ),
         ],
     )
+
+    async def setup(self):
+        # Build volume gauge ranges from the configured storage curve.
+        # Thresholds mirror the % gauge: 40% / 80% of max sensor depth,
+        # looked up through the curve to get absolute ML values.
+        curve = sorted(
+            (
+                (p.level_m.value, p.volume_ml.value)
+                for p in self.config.storage_curve.value
+                if p.level_m.value is not None and p.volume_ml.value is not None
+            ),
+            key=lambda p: p[0],
+        )
+        if len(curve) < 2:
+            return
+
+        max_depth = self.config.max_level.value or curve[-1][0]
+        max_volume = curve[-1][1]
+
+        def volume_at(depth: float) -> float:
+            for (x1, y1), (x2, y2) in zip(curve, curve[1:]):
+                if x1 <= depth <= x2:
+                    return y1 + (depth - x1) * (y2 - y1) / (x2 - x1)
+            return max_volume if depth > curve[-1][0] else curve[0][1]
+
+        low = int(volume_at(max_depth * 0.4))
+        high = int(volume_at(max_depth * 0.8))
+        self.level_volume.ranges = [
+            ui.Range("Low", 0, low, ui.Colour.yellow),
+            ui.Range("Half", low, high, ui.Colour.blue),
+            ui.Range("Full", high, int(max_volume), ui.Colour.green),
+        ]
 
 
 def export():
