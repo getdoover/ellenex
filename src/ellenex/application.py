@@ -28,6 +28,9 @@ class EllenexProcessor(Application):
         if not isinstance(event, MessageCreateEvent):
             return False
 
+        if event.channel.name == "ui_cmds":
+            return True
+
         if event.channel.name != "on_tts_event":
             return False
 

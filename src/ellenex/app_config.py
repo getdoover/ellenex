@@ -25,7 +25,7 @@ class StorageCurvePoint(config.Object):
 
 
 class EllenexProcessorConfig(config.Schema):
-    subscription = ManySubscriptionConfig(default=["on_tts_event"], hidden=True)
+    subscription = ManySubscriptionConfig(default=["on_tts_event", "ui_cmds"], hidden=True)
     position = config.ApplicationPosition()
 
     sensor_type = config.Enum(

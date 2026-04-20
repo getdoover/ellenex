@@ -112,7 +112,8 @@ class EllenexUI(ui.UI, hidden="$config.app().hide_ui"):
 
 
 def export():
-    EllenexUI(None, None, None).export(
-        Path(__file__).parents[2] / "doover_config.json",
-        "ellenex_lorawan",
-    )
+    pass
+    # EllenexUI(None, None, None).export(
+    #     Path(__file__).parents[2] / "doover_config.json",
+    #     "ellenex_lorawan",
+    # )

@@ -35,7 +35,8 @@
                     "x-required": false,
                     "description": "A list of channels to subscribe to.",
                     "default": [
-                        "on_tts_event"
+                        "on_tts_event",
+                        "ui_cmds"
                     ],
                     "x-position": 0,
                     "items": {
