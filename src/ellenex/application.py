@@ -207,13 +207,13 @@ class EllenexProcessor(Application):
         # on fPort 1. 0x10 = command, 0x01 = unit (minute), then minutes
         # as a 16-bit big-endian integer.
         minutes = max(1, min(int(payload), 0xFFFF))
-        frm = base64.b64encode(
+        frame = base64.b64encode(
             bytes([0x10, 0x01, (minutes >> 8) & 0xFF, minutes & 0xFF])
         ).decode()
         log.info("Sending downlink to set uplink interval to %s min", minutes)
         await self.api.create_message(
-            "tts_downlink",
-            {"f_port": 1, "frm_payload": frm},
+            "tts_downlink_request",
+            {"f_port": 1, "payload": frame},
         )
         await self._update_connection_info(minutes)
 
