@@ -241,10 +241,10 @@
         "ui_schema": {
             "displayString": "$config.app().APP_DISPLAY_NAME",
             "hidden": "$config.app().hide_ui:boolean:false",
-            "position": "$config.app().position:number:50",
+            "position": "$config.app().dv_app_position:number:100",
             "icon": null,
             "colour": null,
-            "defaultOpen": false,
+            "defaultOpen": "$config.app().dv_app_default_open:boolean",
             "type": "uiApplication",
             "name": "$config.app().APP_KEY",
             "children": {
@@ -289,6 +289,7 @@
                     "type": "uiVariable",
                     "displayString": "Volume",
                     "showActivity": true,
+                    "form": "radialGauge",
                     "position": 52,
                     "hidden": "$tag.app().level_volume_hidden:boolean:true",
                     "units": "ML",
@@ -354,7 +355,7 @@
                     "type": "uiSubmodule",
                     "displayString": "Details",
                     "showActivity": true,
-                    "position": 58,
+                    "position": 59,
                     "hidden": false,
                     "children": {
                         "raw_level": {
@@ -379,9 +380,20 @@
                             "varType": "float",
                             "currentValue": "$tag.app().raw_battery_v:number:null",
                             "decPrecision": 2
+                        },
+                        "uplink_interval": {
+                            "name": "uplink_interval",
+                            "type": "uiFloatInput",
+                            "displayString": "Uplink Interval",
+                            "position": 58,
+                            "hidden": false,
+                            "units": "min",
+                            "currentValue": "$cmds.app().uplink_interval::240",
+                            "default": 240,
+                            "min": 1,
+                            "max": 1440
                         }
-                    },
-                    "defaultOpen": true
+                    }
                 }
             }
         },

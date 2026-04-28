@@ -1,5 +1,4 @@
 from pathlib import Path
-
 from pydoover import ui
 
 from .app_tags import EllenexTags
@@ -112,8 +111,7 @@ class EllenexUI(ui.UI, hidden="$config.app().hide_ui"):
 
 
 def export():
-    pass
-    # EllenexUI(None, None, None).export(
-    #     Path(__file__).parents[2] / "doover_config.json",
-    #     "ellenex_lorawan",
-    # )
+    EllenexUI(None, None, None).export(
+        Path(__file__).parents[2] / "doover_config.json",
+        "ellenex_lorawan",
+    )
